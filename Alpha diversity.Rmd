@@ -21,76 +21,79 @@ library(ggfortify)
 ## Colors
 Colors per treatment.
 ```{r}
-treatment_colors_AD <- c("C_N100" = "purple3",
-                "N75" = "orchid",
-                "S10_N75" = "mediumvioletred",
-                "S15_N75" = "pink1",
-                "HF10_N100" = "forestgreen",
-                "HF15_N100" = "yellowgreen",
-                "S10_N100" = "indianred1",
-                "S15_N100" = "lightsalmon",
-                "H10_N100" = "orange",
-                "H15_N100" = "lightgoldenrod", 
-                "EBA3" = "slategray2",
-                "EBA3_SER10" = "cornflowerblue",
-                "SER10" = "darkblue",
-                "C_D0" = "seagreen",
-                "CAP05_SEC15_RUD02" = "firebrick", 
-                "BIO" = "gold2", 
-                "C_BIO0" = "plum")
+treatment_colors_AD <- c("Group1" = "purple3",
+                "Group2" = "orchid",
+                "Group3" = "mediumvioletred",
+                "Group4" = "pink1",
+                "Group5" = "forestgreen",
+                "Group6" = "yellowgreen",
+                "Group7" = "indianred1",
+                "Group8" = "lightsalmon",
+                "Group9" = "orange",
+                "Group10" = "lightgoldenrod", 
+                "Group11" = "slategray2",
+                "Group12" = "cornflowerblue",
+                "Group13" = "darkblue",
+                "Group14" = "seagreen",
+                "Group15" = "firebrick", 
+                "Group16" = "gold2", 
+                "Group17" = "plum")
 ```
 
 # Define custom colors for each treatment and location group
 ```{r}
 treatment_colors <- list(
-  Treatment = c("C_N100" = "purple3",
-                "N75" = "orchid",
-                "S10_N75" = "mediumvioletred",
-                "S15_N75" = "pink1",
-                "HF10_N100" = "forestgreen",
-                "HF15_N100" = "yellowgreen",
-                "S10_N100" = "indianred1",
-                "S15_N100" = "lightsalmon",
-                "H10_N100" = "orange",
-                "H15_N100" = "lightgoldenrod", 
-                "EBA3" = "slategray2",
-                "EBA3_SER10" = "cornflowerblue",
-                "SER10" = "darkblue",
-                "C_D0" = "seagreen",
-                "CAP05_SEC15_RUD02" = "firebrick", "BIO" = "gold2", "C_BIO0" = "plum"),
-  Location = c("HG" = "peru", "SM" = "lightseagreen", "ZD" = "maroon"))
+  Treatment = c("Group1" = "purple3",
+                "Group2" = "orchid",
+                "Group3" = "mediumvioletred",
+                "Group4" = "pink1",
+                "Group5" = "forestgreen",
+                "Group6" = "yellowgreen",
+                "Group7" = "indianred1",
+                "Group8" = "lightsalmon",
+                "Group9" = "orange",
+                "Group10" = "lightgoldenrod", 
+                "Group11" = "slategray2",
+                "Group12" = "cornflowerblue",
+                "Group13" = "darkblue",
+                "Group14" = "seagreen",
+                "Group15" = "firebrick", 
+                "Group16" = "gold2", 
+                "Group17" = "plum"),
+  Location = c("Location1" = "peru", "Location2" = "lightseagreen", "Location3" = "maroon"))
 ```
 ## Subset per location 
 You can subset based on many para-metrics, whichever ones you have taken up in your metadata e.g. treatment, location.
 ```{r}
 # Subsetting
-physeq_16Sr_ZD <- subset_samples(physeq_16Sr, Location == "ZD")
-physeq_16Sr_HG <- subset_samples(physeq_16Sr, Location == "HG")
-physeq_16Sr_SM <- subset_samples(physeq_16Sr, Location == "SM")
+physeq_16S_Location1 <- subset_samples(physeq_16S, Location == "Location1")
+physeq_16S_Location2 <- subset_samples(physeq_16S, Location == "Location2")
+physeq_16S_Location3 <- subset_samples(physeq_16S, Location == "Location3")
 ```
 
 ## Colors
 Colors per treatment+location.
 ```{r}
+               
 # Define custom colors for each treatment group
-treatment_colors_ZD <- list(Treatment = c("C_N100" = "purple3",
-                "N75" = "orchid",
-                "S10_N75" = "mediumvioletred",
-                "S15_N75" = "pink1",
-                "HF10_N100" = "forestgreen",
-                "HF15_N100" = "yellowgreen",
-                "S10_N100" = "indianred1",
-                "S15_N100" = "lightsalmon",
-                "H10_N100" = "orange",
-                "H15_N100" = "lightgoldenrod"))
+treatment_colors_Location1 <- list(Treatment = c("Group1" = "purple3",
+                "Group2" = "orchid",
+                "Group3" = "mediumvioletred",
+                "Group4" = "pink1",
+                "Group5" = "forestgreen",
+                "Group6" = "yellowgreen",
+                "Group7" = "indianred1",
+                "Group8" = "lightsalmon",
+                "Group9" = "orange",
+                "Group10" = "lightgoldenrod"))
 
-treatment_colors_SM <- list(Treatment = c("EBA3" = "slategray2",
-                "EBA3_SER10" = "cornflowerblue",
-                "SER10" = "darkblue",
-                "C_D0" = "seagreen",
-                "CAP05_SEC15_RUD02" = "firebrick"))
+treatment_colors_Location2 <- list(Treatment = c("Group11" = "slategray2",
+                "Group12" = "cornflowerblue",
+                "Group13" = "darkblue",
+                "Group14" = "seagreen",
+                "Group15" = "firebrick"))
 
-treatment_colors_HG <- list(Treatment = c("BIO" = "gold2", "C_BIO0 " = "plum"))
+treatment_colors_Location3 <- list(Treatment = c("Group16" = "gold2", "Group17" = "plum"))
 
 ```
 
@@ -103,13 +106,13 @@ Shannon: A measure of entropy accounting for species abundance and distribution.
 
 ```{r}
 # Extract OTU from physeq
-otu_file <- otu_table(physeq_hg)
+otu_file <- otu_table(physeq)
 
 # Set OTU as matrix named data
 data <- as.matrix(otu_file)
 
 # Plot richness
-pAlpha = plot_richness(physeq_hg,
+pAlpha = plot_richness(physeq,
                         color = "Treatment",
                         measures = c("Observed", "Simpson", "Shannon"), # Specifies which alpha diversity indices to calculate and display. 
                         title = "Alpha Diversity of Bacterial Species for ZD Rhizosphere Samples") # Plot Title
@@ -136,8 +139,6 @@ alphadte.simpson <- alphadte[(variable == "Simpson")]
 alphadte.simpson
 ```
 
-
-
 # Shannon diversity index boxplot 
 Shows spread of individual samples within a sample groups
 ```{r}
@@ -148,7 +149,7 @@ shannon_all_tempzone <- ggplot(data = alphadte.shannon,
     scale_y_continuous(breaks=seq(4.5,6.5, by=0.5)) + # Ensures scale regardless of data on y-axis, and sets the interval
     labs(x="Treatment_nonabbreviated", y="Shannon Diversity Index", title="Shannon Index of Bacterial Species in Rhizosphere Samples of St. Maartensvlotbrug")+ # Axis titles  
     theme_bw()+
-    scale_fill_manual(values=c(treatment_colors_AD)) + # Set colors
+    scale_fill_manual(values=c(treatment_colors_Location1)) + # Set colors
     theme(text = element_text(size=12),legend.position = "right",
           legend.text = element_text(size=12),
           axis.title=element_text(size=14),
@@ -199,9 +200,9 @@ simpson_all_tempzone <- ggplot(data = alphadte.simpson,
     geom_boxplot(lwd=0.1)+
     expand_limits(y=0.95:1) +
     scale_y_continuous(breaks=seq(0.95, 1, by=0.01)) +
-    labs(x="Treatment", y="Simpson Diversity Index", title="Simpson Index of Bacterial Species in Rhizosphere Samples of St. Maartensvlotbrug")+
+    labs(x="Treatment", y="Simpson Diversity Index", title="Simpson Index of Bacterial Species in Rhizosphere Samples")+
     theme_bw()+
-    scale_fill_manual(values=c(treatment_colors_PCA)) +
+    scale_fill_manual(values=c(treatment_colors)) +
     theme(text = element_text(size=12),legend.position = "right",
           legend.text = element_text(size=12),
           axis.title=element_text(size=14),
@@ -461,3 +462,4 @@ results_df <- conover_result$pairwise  # This contains the comparison results
 # Convert results to a data frame for easier manipulation
 results_df <- as.data.frame(results_df)
 ```
+
