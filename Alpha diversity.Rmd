@@ -1,0 +1,463 @@
+---
+title: "Alpha Diversity"
+author: "Angel"
+date: "2024-11-12"
+output: html_document
+---
+```{r}
+library(dplyr)
+library(rmarkdown)
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(plotly)
+library(ggplot2)
+library(pheatmap)
+library(readxl)
+library(dbplyr)
+library(ggfortify)
+```
+
+## Colors
+Colors per treatment.
+```{r}
+treatment_colors_AD <- c("C_N100" = "purple3",
+                "N75" = "orchid",
+                "S10_N75" = "mediumvioletred",
+                "S15_N75" = "pink1",
+                "HF10_N100" = "forestgreen",
+                "HF15_N100" = "yellowgreen",
+                "S10_N100" = "indianred1",
+                "S15_N100" = "lightsalmon",
+                "H10_N100" = "orange",
+                "H15_N100" = "lightgoldenrod", 
+                "EBA3" = "slategray2",
+                "EBA3_SER10" = "cornflowerblue",
+                "SER10" = "darkblue",
+                "C_D0" = "seagreen",
+                "CAP05_SEC15_RUD02" = "firebrick", 
+                "BIO" = "gold2", 
+                "C_BIO0" = "plum")
+```
+
+# Define custom colors for each treatment and location group
+```{r}
+treatment_colors <- list(
+  Treatment = c("C_N100" = "purple3",
+                "N75" = "orchid",
+                "S10_N75" = "mediumvioletred",
+                "S15_N75" = "pink1",
+                "HF10_N100" = "forestgreen",
+                "HF15_N100" = "yellowgreen",
+                "S10_N100" = "indianred1",
+                "S15_N100" = "lightsalmon",
+                "H10_N100" = "orange",
+                "H15_N100" = "lightgoldenrod", 
+                "EBA3" = "slategray2",
+                "EBA3_SER10" = "cornflowerblue",
+                "SER10" = "darkblue",
+                "C_D0" = "seagreen",
+                "CAP05_SEC15_RUD02" = "firebrick", "BIO" = "gold2", "C_BIO0" = "plum"),
+  Location = c("HG" = "peru", "SM" = "lightseagreen", "ZD" = "maroon"))
+```
+## Subset per location 
+You can subset based on many para-metrics, whichever ones you have taken up in your metadata e.g. treatment, location.
+```{r}
+# Subsetting
+physeq_16Sr_ZD <- subset_samples(physeq_16Sr, Location == "ZD")
+physeq_16Sr_HG <- subset_samples(physeq_16Sr, Location == "HG")
+physeq_16Sr_SM <- subset_samples(physeq_16Sr, Location == "SM")
+```
+
+## Colors
+Colors per treatment+location.
+```{r}
+# Define custom colors for each treatment group
+treatment_colors_ZD <- list(Treatment = c("C_N100" = "purple3",
+                "N75" = "orchid",
+                "S10_N75" = "mediumvioletred",
+                "S15_N75" = "pink1",
+                "HF10_N100" = "forestgreen",
+                "HF15_N100" = "yellowgreen",
+                "S10_N100" = "indianred1",
+                "S15_N100" = "lightsalmon",
+                "H10_N100" = "orange",
+                "H15_N100" = "lightgoldenrod"))
+
+treatment_colors_SM <- list(Treatment = c("EBA3" = "slategray2",
+                "EBA3_SER10" = "cornflowerblue",
+                "SER10" = "darkblue",
+                "C_D0" = "seagreen",
+                "CAP05_SEC15_RUD02" = "firebrick"))
+
+treatment_colors_HG <- list(Treatment = c("BIO" = "gold2", "C_BIO0 " = "plum"))
+
+```
+
+######################################## Alpha Diversity ########################################
+
+## Shannon & Simpson
+Observed: The number of observed species (species richness).
+Simpson: A diversity index accounting for both abundance and evenness.
+Shannon: A measure of entropy accounting for species abundance and distribution.
+
+```{r}
+# Extract OTU from physeq
+otu_file <- otu_table(physeq_hg)
+
+# Set OTU as matrix named data
+data <- as.matrix(otu_file)
+
+# Plot richness
+pAlpha = plot_richness(physeq_hg,
+                        color = "Treatment",
+                        measures = c("Observed", "Simpson", "Shannon"), # Specifies which alpha diversity indices to calculate and display. 
+                        title = "Alpha Diversity of Bacterial Species for ZD Rhizosphere Samples") # Plot Title
+pAlpha + geom_point(size = 3) # This adds points to the plot using geom_point with a size of 3. It overlays the calculated alpha diversity values as points on the graph.
+
+# View plot with applied colors
+pAlpha
+```
+
+```{r}
+# The data used in the pAlpha plot is extracted into a new object, dalltreatments. In ggplot, the underlying data is stored in the $data attribute of the plot object.
+dalltreatments<-pAlpha$data 
+
+# Converts the dalltreatments object into a data.table
+alphadte = data.table(dalltreatments)
+alphadte
+
+# Isolate Shannon diversity metric, excluding Observed and Simpson data.
+alphadte.shannon <- alphadte[(variable == "Shannon")]
+alphadte.shannon
+
+# Isolate Simpson diversity metric, excluding Observed and Simpson data.
+alphadte.simpson <- alphadte[(variable == "Simpson")]
+alphadte.simpson
+```
+
+
+
+# Shannon diversity index boxplot 
+Shows spread of individual samples within a sample groups
+```{r}
+shannon_all_tempzone <- ggplot(data = alphadte.shannon,
+                               aes(x=Treatment, y = value, fill=Treatment))+ 
+    geom_boxplot(lwd=0.1)+
+    expand_limits(y=4.5:6.5) + # y-axis scale
+    scale_y_continuous(breaks=seq(4.5,6.5, by=0.5)) + # Ensures scale regardless of data on y-axis, and sets the interval
+    labs(x="Treatment_nonabbreviated", y="Shannon Diversity Index", title="Shannon Index of Bacterial Species in Rhizosphere Samples of St. Maartensvlotbrug")+ # Axis titles  
+    theme_bw()+
+    scale_fill_manual(values=c(treatment_colors_AD)) + # Set colors
+    theme(text = element_text(size=12),legend.position = "right",
+          legend.text = element_text(size=12),
+          axis.title=element_text(size=14),
+          axis.text.x = element_text(size=0, angle = 0, hjust = 0, vjust=0),
+          axis.text.y = element_text(size=12),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank()) # Hides grid marks and tick marks 
+```
+
+```{r}
+print(shannon_all_tempzone)
+```
+
+## Shannon diversity index boxplot with location sorted and marked on x-axis 
+```{r}
+alphadte.shannon <- alphadte.shannon %>%
+  arrange(Location)  # Sort by Location
+
+# Set 'Location' as a factor with levels in sorted order
+alphadte.shannon$Location <- factor(alphadte.shannon$Location,
+                                    levels = unique(alphadte.shannon$Location))
+
+# Generate the boxplot, now using Location as the factor for ordering
+shannon_all_loczone <- ggplot(data = alphadte.shannon,
+                               aes(x = Location, y = value, fill = Treatment_nonabbreviated)) +
+    geom_boxplot(lwd = 0.1) +
+    expand_limits(y = 3:7) +
+    scale_y_continuous(breaks = seq(3, 7, by = 1)) +
+    labs(x = "Location", y = "Shannon Diversity Index", 
+         title = "Shannon Index of Bacterial Species in Rhizosphere Samples") +
+    theme_bw() +
+    scale_fill_manual(values = treatment_colors_AD) +  # Apply custom colors for Treatment
+    theme(text = element_text(size = 12),
+          legend.position = "right",
+          legend.text = element_text(size = 12),
+          axis.title = element_text(size = 14),
+          axis.text.x = element_text(size = 12, angle = 0, hjust = 0.5, vjust = 0.5),
+          axis.text.y = element_text(size = 12),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+```
+
+## Simpson diversity index boxplot 
+Shows spread of individual samples within a sample groups
+```{r}
+# Boxplot 
+simpson_all_tempzone <- ggplot(data = alphadte.simpson,
+                               aes(x=Treatment, y = value, fill=Treatment))+
+    geom_boxplot(lwd=0.1)+
+    expand_limits(y=0.95:1) +
+    scale_y_continuous(breaks=seq(0.95, 1, by=0.01)) +
+    labs(x="Treatment", y="Simpson Diversity Index", title="Simpson Index of Bacterial Species in Rhizosphere Samples of St. Maartensvlotbrug")+
+    theme_bw()+
+    scale_fill_manual(values=c(treatment_colors_PCA)) +
+    theme(text = element_text(size=12),legend.position = "right",
+          legend.text = element_text(size=12),
+          axis.title=element_text(size=14),
+          axis.text.x = element_text(size=0, angle = 0, hjust = 0, vjust=0),
+          axis.text.y = element_text(size=12),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+```
+
+```{r}
+print(simpson_all_loczone)
+```
+
+## Simpson diversity index boxplot with location sorted and marked on x-axis 
+```{r}
+alphadte.simpson <- alphadte.simpson %>%
+  arrange(Location)  # Sort by Location
+
+# Set 'Location' as a factor with levels in sorted order
+alphadte.simpson$Location <- factor(alphadte.simpson$Location,
+                                    levels = unique(alphadte.simpson$Location))
+
+# Generate the boxplot, now using Location as the factor for ordering
+simpson_all_loczone <- ggplot(data = alphadte.simpson,
+                               aes(x = Location, y = value, fill = Treatment_nonabbreviated)) +
+    geom_boxplot(lwd = 0.1) +
+    expand_limits(y = 3:7) +
+    scale_y_continuous(breaks = seq(3, 7, by = 1)) +
+    labs(x = "Location", y = "Simpson Diversity Index", 
+         title = "Simpson Index of Bacterial Species in Rhizosphere Samples") +
+    theme_bw() +
+    scale_fill_manual(values = treatment_colors_AD) +  # Apply custom colors for Treatment
+    theme(text = element_text(size = 12),
+          legend.position = "right",
+          legend.text = element_text(size = 12),
+          axis.title = element_text(size = 14),
+          axis.text.x = element_text(size = 12, angle = 0, hjust = 0.5, vjust = 0.5),
+          axis.text.y = element_text(size = 12),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+```
+
+```{r}
+print(simpson_all_loczone)
+```
+
+
+######################################## Heatmap ########################################
+## heatmap of identified species 
+Sorted by treatment and location
+
+
+```{r}
+datasheet <- sample_data(phy_rare)
+datasheet <- as.data.frame(datasheet)
+
+otu_file <- otu_table(phy_rare)
+data <- as.matrix(otu_file)
+otu_file <- as.data.frame(otu_file)
+otu_file_norm <- otu_file/colSums(otu_file)
+cal_z_score <- function(otu_file_norm){
+  (otu_file_norm - mean(otu_file_norm)) / sd(otu_file_norm)
+}
+otu_file_norm <- t(apply(otu_file, 1, cal_z_score))
+
+##
+my_sample_col <- data.frame(Location = datasheet$Location,
+                            Treatment = datasheet$Treatment)
+row.names(my_sample_col) <- colnames(otu_file)
+
+# --- Set Colors ---
+ann_colors_list = list(Location = c("HG" = "peru", "SM" = "lightseagreen", "ZD" = "maroon"),
+                  Treatment = c(treatment_colors_AD))
+
+pheatmap(otu_file_norm,
+         annotation_col = my_sample_col,
+         annotation_colors = ann_colors_list,
+         treeheight_row = 0,
+         treeheight_col = 50,
+         fontsize_row = 8,
+         fontsize_col = 8,
+         border_color = NA,
+         legend = TRUE,
+         fontsize = 8)
+###
+```
+
+######################################## PCA plot ########################################
+
+## Renaming
+```{r}
+phy_rare <- physeq_16Sr
+```
+
+## Extract data 
+```{r}
+datasheet <- sample_data(phy_rare)
+datasheet <- as.data.frame(datasheet)
+
+otu_file <- otu_table(phy_rare)
+data <- as.matrix(otu_file)
+otu_file <- as.data.frame(otu_file)
+rownames(data) <- otu_file$...1
+data_transpose <- t(data)
+
+df <- cbind(data_transpose, datasheet)
+```
+
+## set variables 
+Number changes depending on the size of the df
+```{r}
+df_pca <- df[1:3030]  
+```
+
+## Set all values to numeric
+```{r}
+df_pca_numeric <- df_pca[, sapply(df_pca, is.numeric)]
+df_pca2 <- df_pca_numeric[,(which(colSums(df_pca_numeric)!=0))]
+pca_res <- prcomp(df_pca2, scale. = TRUE)
+```
+
+## PCA plot
+```{r}
+p <- autoplot(pca_res, 
+               data = df, 
+               colour = "Treatment", 
+               shape = "Location", 
+               size = 4, 
+               alpha = 0.7) +  # Add transparency to points
+    scale_colour_manual(values = treatment_colors_AD) +
+    theme_bw() + 
+    ggtitle("PCA Plot of Bacterial Communities in Rhizosphere Samples")
+```
+
+```{r}
+print(p)
+```
+
+######################################## PCA plot per location ########################################
+
+```{r}
+# Subsetting
+physeq_16Ss_ZD <- subset_samples(physeq_16Ss, Location == "ZD")
+physeq_16Ss_HG <- subset_samples(physeq_16Ss, Location == "HG")
+physeq_16Ss_SM <- subset_samples(physeq_16Ss, Location == "SM")
+```
+
+```{r}
+# Renaming 
+phy_rare <- physeq_16Ss_ZD
+```
+
+```{r}
+datasheet <- sample_data(phy_rare)
+datasheet <- as.data.frame(datasheet)
+
+otu_file <- otu_table(phy_rare)
+data <- as.matrix(otu_file)
+otu_file <- as.data.frame(otu_file)
+rownames(data) <- otu_file$...1
+data_transpose <- t(data)
+
+df <- cbind(data_transpose, datasheet)
+```
+
+```{r}
+# set to variables
+df_pca <- df[1:3264]  
+```
+
+```{r}
+# is.numeric
+df_pca_numeric <- df_pca[, sapply(df_pca, is.numeric)]
+df_pca2 <- df_pca_numeric[,(which(colSums(df_pca_numeric)!=0))]
+pca_res <- prcomp(df_pca2, scale. = TRUE)
+```
+
+```{r}
+## plot modified
+p <- autoplot(pca_res, 
+               data = df, 
+               colour = "Treatment", 
+               size = 4, 
+               alpha = 0.7) +  # Add transparency to points
+    scale_colour_manual(values = treatment_colors_PCA) +
+    theme_bw() + 
+    ggtitle("PCA Plot of Bacterial Communities in Soil Samples from ZD")
+```
+
+```{r}
+print(p)
+```
+
+######################################## Statistics ########################################
+```{r}
+# Shapiro-Wilk test for normality 
+shapiro.test(alphadte.shannon$value) #Where W = normality 
+
+# Barlett test for homogeneity of variances
+bartlett.test(value ~ Treatment, alphadte.shannon)
+bartlett.test(value ~ Location, alphadte.shannon)
+```
+## Distribution
+If your data follows normal distribution -> ANOVA
+If your data does not follow normal distribution or if your sample size is too small -> Kruskal Wallis test
+
+
+## ANOVA
+Tests whether there are statistically significant differences in the mean "value" between different "Treatment" groups in the "alphadte.richness" data frame.
+
+```{r}
+# Anova Treatment 
+res.aov.richness.tempzone <- aov  (value ~ Treatment, data=alphadte.shannon)
+summary(res.aov.richness.tempzone)
+
+# Anova Location
+res.aov.richness.tree <- aov  (value ~ Location, data=alphadte.shannon)
+summary(res.aov.richness.tree)
+```
+
+## TukeyHSD
+If the result of the ANOVA test is significant, you can perform Tukey's HSD to determine which specific groups differ from each other. Pairwise comparisons across all groups.
+```{r}
+# Tukey Treatment
+TukeyHSD(res.aov.richness.tempzone)
+
+#Tukey Location
+TukeyHSD(res.aov.richness.tree)
+```
+
+## Kruskal Wallis 
+
+```{r}
+# Kruskal Treatment
+kruskal.test(value ~ Treatment, data = alphadte.shannon)
+
+# Kruskal Location
+kruskal.test(value ~ Location, data = alphadte.shannon)
+```
+
+# Pairwise Wilcoxon test
+Assumes independent samples; non-parametric 
+```{r}
+# Wilcoxon Treatment
+pairwise.wilcox.test(alphadte.shannon$value, alphadte.shannon$Treatment,
+                     p.adjust.method = "BH")
+```
+
+# Conover test
+```{r}
+# Conover Treatment 
+conover.test (alphadte.shannon$value, g=alphadte.shannon$Treatment, method=p.adjustment.method, kw=TRUE, label=TRUE, wrap=FALSE, table=TRUE, list=FALSE, rmc=FALSE, alpha=0.05, altp=FALSE)
+
+conover.test (alphadte.shannon$value, g=alphadte.shannon$Treatment, method = "BH", kw=TRUE, label=TRUE, wrap=FALSE, table=TRUE, list=FALSE, rmc=FALSE, alpha=0.05, altp=FALSE)
+
+results_df <- conover_result$pairwise  # This contains the comparison results
+
+# Convert results to a data frame for easier manipulation
+results_df <- as.data.frame(results_df)
+```
